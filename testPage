@@ -1,0 +1,136 @@
+## this line sets page to the system-pg[id] tag as the starting root & gets info from there 
+#set ($page = $_XPathTool.selectSingleNode($contentRoot, '//system-page[@id]'))
+
+## this line sets page2 to the  <system-data-st> tag as the starting root 
+#set ($page2 = $_XPathTool.selectSingleNode($contentRoot, '//system-data-structure'))
+
+## this line sets nets to the <system-data-st> tag tag as the root
+#set($nets = $_XPathTool.selectNodes($contentRoot, "//system-page/system-data-structure"))
+
+## this loops through all the <system-data-st> tags 
+#foreach ($net in $nets)
+
+## this line sets netfam to the netId 
+#set ($netfam = $net.getChild('netid').text)
+
+## this line checks if the netID we have & the one we are looking for matches
+#if( $netfam.equals("pn9687"))
+
+## uses XPath Tool to grab info (middle, first, last name)
+#set($firstN = $_XPathTool.selectSingleNode($net, '../dynamic-metadata[name = "firstname"]/value'))
+#set($lastN = $_XPathTool.selectSingleNode($net, '../dynamic-metadata[name = "lastname"]/value'))
+
+## serializer tool helps with printing out special characs
+<h2>$_SerializerTool.serialize(${firstN},false) $_SerializerTool.serialize(${lastN}, false)</h2>
+
+## this sets title to the occupation title of the faculty member
+#set($title = $net.getChild('title').text)
+<h3>$title</h3>
+
+## this sets the dept of the faculty member & then prints it out
+#set ($dept = $_XPathTool.selectSingleNode($net, 'college-and-department/department'))
+<h2>Department of $_SerializerTool.serialize(${dept}, false)</h2>
+
+## this sets the email of the faculty member & prints it out
+<p>#set($email = $_XPathTool.selectSingleNode($net, 'contact-info/email'))
+<b>E-mail: </b>$_SerializerTool.serialize(${email}, true)</p>
+
+## this sets the phone # of the faculty member 
+<p>#set($phone = $_XPathTool.selectSingleNode($net, 'contact-info/phone'))
+<b>Phone: </b>$_SerializerTool.serialize(${phone}, false)</p>
+
+## this sets the office location of the faculty member 
+<p>#set($office = $_XPathTool.selectSingleNode($net, 'contact-info/office'))
+<b>Office: </b>$_SerializerTool.serialize(${office}, false)</p>
+
+## this sets the office hours of the faculty member 
+<p>#set($hours = $_XPathTool.selectSingleNode($net, 'contact-info/hours'))
+<b>Hours: </b>$_SerializerTool.serialize(${hours}, false)</p>
+
+## this sets the link of the CV (if they have one) of the faculty member 
+#set($linktocv = $net.getChild('linktocv').text)
+<a href= "$linktocv"> My CV</a> 
+
+## this sets the summary of the faculty member (if they wrote one) 
+<p>#set($summ = $_XPathTool.selectSingleNode($net, 'desc'))
+$_SerializerTool.serialize(${summ}, false)</p>
+
+## this displays any service they have done (if they have done or listed any)
+<p>#set($serv = $_XPathTool.selectSingleNode($net, 'service'))
+#if($serv)
+$_SerializerTool.serialize(${serv}, false)</p>
+#end
+
+## this loops through all degrees they have (if they have any OR have listed any out) & displays them
+<h2><b>Education</b></h2>
+#foreach($degree in $_XPathTool.selectNodes($net, 'degrees/degree'))
+<ul>$_SerializerTool.serialize(${degree}, false)</ul>
+#end
+
+## this displays all selected accomplishments (if they have any or have listed any)
+<p>#set($acc = $_XPathTool.selectSingleNode($net, 'selected-accomplishments'))
+#if($acc)
+<h2><b>Selected Accomplishments</b></h2>
+$_SerializerTool.serialize(${acc}, false)</p>
+#end
+    
+ ## this line creates a table to organize all scheduled classes that the faculty has 
+<style>#courses th, #courses td { padding: 5px; }</style>
+
+## this line sets tname to quarter_name (the current semester) & uses that as the root to grab the class data
+#set($tname = $_XPathTool.selectSingleNode($page, "system-data-structure/courses/quarter/quarter_name"))
+    <h2>$_SerializerTool.serialize(${tname}, false)</h2>
+    <table border="1" id="courses">
+        <tr bgcolor="#5DADE2">
+            <th><b>Course #</b></th>
+            <th><b>Sec</b></th>
+            <th><b>Course Title</b></th>
+            <th><b>Days</b></th>
+            <th><b>From</b></th>
+            <th><b>To</b></th>
+            <th><b>Location</b></th>
+            <th><b>Campus</b></th>
+        </tr>
+        
+        ## this loops through all the info about the class & fills in the table we made
+        #foreach($course in $_XPathTool.selectNodes($net,'courses/quarter/course'))
+        #if($course)
+            <tr>
+                <td>
+                    $course.getChild('course_number').text
+                </td>
+                <td>
+                    $course.getChild('course_section').text
+                </td>
+                  <td>
+                    $course.getChild('course_description').text
+                </td>
+                  <td>
+                    $course.getChild('course_days').text
+                </td>
+                  <td>
+                    $course.getChild('course_start_time').text
+                </td>
+                  <td>
+                    $course.getChild('course_end_time').text
+                </td>
+                  <td>
+                    $course.getChild('course_location').text
+                </td>
+                  <td>
+                    $course.getChild('course_campus').text
+                </td>
+            </tr>
+              #else
+              
+            ## if they are not teaching, it will print this out
+            #if(!$courses)
+            <p>Not Teaching this Semester</p>
+            #end
+            #end
+           
+#end
+ </table>
+#end
+#end
+    
